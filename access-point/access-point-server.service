@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 WorkingDirectory=/this/path/will/be/replaced
-ExecStart=/usr/bin/npm start
+ExecStart=/usr/bin/python3 server.py
 Restart=on-failure
 RestartSec=10
 Environment=PORT=3000

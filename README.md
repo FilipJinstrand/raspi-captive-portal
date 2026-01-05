@@ -18,11 +18,18 @@ Ever connected to a WiFi network in public space? You've probably been redirecte
 
 ## What you get
 
-**This repo offers you a complete setup for an access point with a captive portal, but without Internet access.** Instead, you can serve a static HTML page to people connecting to your WiFi network. See my project [`raspi-captive-circle`](https://github.com/Splines/raspi-captive-circle) as a full project example where users can play a game in a captive portal together.
+**This repo offers you a complete setup for an access point with a captive portal that allows WiFi configuration.** When users connect to the Raspberry Pi's WiFi network, they are presented with a web interface where they can scan for available WiFi networks and connect the Raspberry Pi to their chosen network by entering the password.
+
+Key features:
+- **Access Point**: Raspberry Pi creates its own WiFi network that others can connect to
+- **WiFi Configuration Interface**: Users can scan for WiFi networks, see signal strength and security status, and connect the Raspberry Pi to any network
+- **Python-based**: Lightweight server using only Python standard library - no Node.js required
+- **Captive Portal**: Automatic redirect to configuration page when users connect
 
 You probably want to use this repo in one of these ways:
 
-- As a starting point for your own project using an access point and/or captive portal. See the installation instructions in this case. Check out my [medium post](https://dominicplein.medium.com/captive-portal-access-point-on-the-raspberry-pi-easy-setup-28a9bf72e998) to get some ideas for a project.
+- As a WiFi configuration tool for your Raspberry Pi in headless mode (no monitor/keyboard)
+- As a starting point for your own project using an access point and/or captive portal
 - As a resource to get inspired by and to consult if you are stuck. The code contains links to other useful resources like package documentations, stack overflow questions etc.
 
 ## Setup
@@ -33,14 +40,17 @@ You probably want to use this repo in one of these ways:
 <details>
   <summary><strong>Installation</strong></summary>
 
-  If you connect to the Raspberry Pi from remote, make sure to do so via Ethernet an NOT via WiFi as the setup script will create its own WiFi network and thus you won't be connected anymore (and maybe even lock yourself out of your Raspi). Python is installed by default on a Raspberry Pi, so clone this repository and execute the script via:
+  If you connect to the Raspberry Pi from remote, make sure to do so via Ethernet and NOT via WiFi as the setup script will create its own WiFi network and thus you won't be connected anymore (and maybe even lock yourself out of your Raspi). Python is installed by default on a Raspberry Pi, so clone this repository and execute the setup:
 
   <sub>Note that the script needs to run as sudo user. Make sure that you agree with the commands executed beforehand by looking into the `.sh` scripts in the folder `access-point/`.</sub>
 
-  ```
+  ```bash
   git clone https://github.com/Splines/raspi-captive-portal.git
   cd ./raspi-captive-portal/
-  sudo python setup.py
+  # Run the access point setup script
+  sudo ./access-point/setup-access-point.sh
+  # Copy and enable the Python server service
+  sudo ./access-point/setup-server.sh
   ```
 
 </details>
@@ -48,7 +58,16 @@ You probably want to use this repo in one of these ways:
 <details>
   <summary><strong>Connection</strong></summary>
 
-  After the installation, you should be able to connect to the new WiFi network called `Splines Raspi AP` using the password `splinesraspi`. You should be redirected to a static welcome page. If you open a "normal" browser, type in any http URL (http**s** URLs are not working) and you should also get redirected to the static page. The URL is supposed to read `splines.portal` (but visiting any URL should redirect there). From here on you can build your custom captive portal webpage by customizing the code in the `server` folder of this project.
+  After the installation, you should be able to connect to the new WiFi network called `Splines Raspi AP` using the password `splinesraspi`. You should be redirected to the WiFi configuration page. If you open a "normal" browser, type in any http URL (http**s** URLs are not working) and you should also get redirected to the configuration page. The URL is supposed to read `splines.portal` (but visiting any URL should redirect there).
+
+  **Using the WiFi Configuration Interface:**
+  1. Click "Scan for Networks" to see available WiFi networks
+  2. Select the network you want to connect to
+  3. Enter the password if the network is secured
+  4. Click "Connect" to connect the Raspberry Pi to that network
+  5. The access point will remain active after connection - you can disable it manually if needed
+
+  From here on you can build your custom captive portal webpage by customizing the code in the `server/server.py` file and the `server/public/` folder of this project.
 
 </details>
 
@@ -56,7 +75,13 @@ You probably want to use this repo in one of these ways:
 <details>
   <summary><strong>Customization</strong></summary>
 
-  To customize the WiFi SSID, password and the like, simply change the respective key-value pairs in the config files inside the folder `access-point/`. Then launch the setup script again to apply the changes (`sudo python setup.py`). Furthermore, you can adjust server settings in the file `server/src/server.ts`.
+  To customize the WiFi SSID, password and the like, simply change the respective key-value pairs in the config files inside the folder `access-point/`. Then run the setup scripts again to apply the changes:
+  ```bash
+  sudo ./access-point/setup-access-point.sh
+  sudo ./access-point/setup-server.sh
+  ```
+  
+  Furthermore, you can adjust server settings in the file `server/server.py`.
 
   Some default values:
 
@@ -64,7 +89,8 @@ You probably want to use this repo in one of these ways:
   - using `wlan0` as interface
   - WiFi: SSID: `Splines Raspi AP`, password: `splinesraspi`,
     <br>country code: `DE` (change if you are not in Germany)
-  - Server: port: `3000` (all request on port 80 (http) get redirected to this port), host name: `splines.portal`
+  - Server: port: `3000` (all requests on port 80 (http) get redirected to this port), host name: `splines.portal`
+  - WiFi management: Uses `nmcli` (NetworkManager) for scanning and connecting
 
 </details>
 
@@ -106,16 +132,23 @@ sudo restart
 
 🎈 **I see the `Splines Raspi AP` WiFi network, but the web page doesn't show up**
 
-Access the URL `splines.portal` in your browser. Also make sure that the server serving the static HTML pages is up and running:
+Access the URL `splines.portal` in your browser. Also make sure that the server serving the HTML pages is up and running:
 
 ```bash
 sudo systemctl status access-point-server
 ```
 
-The output should contain this line: "⚡ Raspberry Pi Server listening on port 3000". Any error here? Try to restart the service:
+The output should contain: "Captive Portal Server running on port 3000". Any error here? Try to restart the service:
 
 ```bash
 sudo systemctl restart access-point-server
+```
+
+You can also run the server manually for debugging:
+
+```bash
+cd server
+python3 server.py
 ```
 
 
@@ -130,14 +163,15 @@ sudo systemctl restart access-point-server
 
   These are the principal dependencies used in this project:
 
-  *Captive Portal*
+  *Captive Portal & Access Point*
   - `dhcpcd`:  DHCP server (automatically assign IP addresses to clients)
   - `hostapd`: Access Point (AP)
   - `dnsmasq`: DNS server (name resolution)
   - `netfilter-persistent` & `iptables-persistent`: Save firewall rules and restore them when the Raspberry Pi boots
 
-  *Node.js Server*
-  - `express` 
+  *Python Web Server*
+  - Python 3 (standard library only - no external packages required)
+  - `nmcli` (NetworkManager CLI) for WiFi scanning and connection management 
 
 </details>
 

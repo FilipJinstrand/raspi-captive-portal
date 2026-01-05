@@ -1,33 +1,233 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Splines Portal</title>
+    <title>WiFi Configuration</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+        
+        .scan-button {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: background 0.3s;
+        }
+        
+        .scan-button:hover {
+            background: #5568d3;
+        }
+        
+        .scan-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .networks-list {
+            margin-bottom: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .network-item {
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .network-item:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        
+        .network-item.selected {
+            border-color: #667eea;
+            background: #f0f2ff;
+        }
+        
+        .network-name {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .network-info {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .signal-strength {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .signal-bar {
+            width: 3px;
+            background: #ccc;
+            border-radius: 2px;
+        }
+        
+        .signal-bar.active {
+            background: #667eea;
+        }
+        
+        .security-badge {
+            padding: 2px 8px;
+            background: #ffeaa7;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        
+        .password-section {
+            margin-bottom: 20px;
+        }
+        
+        .password-section input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+        
+        .password-section input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .connect-button {
+            width: 100%;
+            padding: 12px;
+            background: #10ac84;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .connect-button:hover {
+            background: #0e9672;
+        }
+        
+        .connect-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .message {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+        }
+        
+        .status {
+            background: #e7f3ff;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #004085;
+        }
+    </style>
 </head>
-
 <body>
-    <h2>Yeah, this is the welcome screen, you've made it 🙌</h2>
-
-    <p>
-        Have a lot of fun with your own project.<br>
-
-        Feel free to open an issue if something is not working as expected,
-        but read the troubleshooting section first.<br>
-
-        If you created a project with a captive portal based on this,
-        feel free to inform me, so that I can look into it 👍
-    </p>
-
-    <p>
-        <strong>Endpoint /api/ping test: </strong>
-        <span id="api-endpoint-test">Waiting for server response...</span>
-    </p>
-
-
-    <script src="index.js"></script>
+    <div class="container">
+        <h1>📡 WiFi Configuration</h1>
+        <p class="subtitle">Connect your Raspberry Pi to a WiFi network</p>
+        
+        <div id="status" class="status" style="display: none;"></div>
+        <div id="message" class="message"></div>
+        
+        <button id="scanButton" class="scan-button">🔍 Scan for Networks</button>
+        
+        <div id="networksList" class="networks-list"></div>
+        
+        <div id="passwordSection" class="password-section" style="display: none;">
+            <label for="password">Password:</label>
+            <input type="password" id="password" placeholder="Enter WiFi password">
+        </div>
+        
+        <button id="connectButton" class="connect-button" style="display: none;">Connect</button>
+    </div>
+    
+    <script src="./index.js"></script>
 </body>
-
 </html>
