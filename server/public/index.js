@@ -234,6 +234,16 @@ function connectToNetwork() {
                 setTimeout(() => {
                     showMessage(data.note, 'info');
                 }, 2000);
+                
+                // If note mentions verification, show portal shutdown message after delay
+                if (data.note.includes('Verifying') || data.note.includes('disabled')) {
+                    setTimeout(() => {
+                        showMessage('🔄 Captive portal will be disabled automatically if connection is successful.', 'info');
+                    }, 4000);
+                    setTimeout(() => {
+                        showMessage('✓ You can now access normal network services (AdGuard, etc.)', 'success');
+                    }, 10000);
+                }
             }
             // Refresh status
             setTimeout(checkConnectionStatus, 2000);

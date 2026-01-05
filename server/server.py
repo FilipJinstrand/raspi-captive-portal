@@ -10,6 +10,8 @@ import re
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import parse_qs, urlparse
 import os
+import time
+import threading
 
 
 class CaptivePortalHandler(SimpleHTTPRequestHandler):
@@ -158,10 +160,18 @@ class CaptivePortalHandler(SimpleHTTPRequestHandler):
             )
             
             if result.returncode == 0:
+                # Connection command succeeded, now verify internet connectivity
+                # Start verification in background thread to not block the response
+                threading.Thread(
+                    target=self.verify_and_disable_portal,
+                    args=(ssid,),
+                    daemon=True
+                ).start()
+                
                 self.send_json_response({
                     'success': True,
                     'message': f'Successfully connected to {ssid}',
-                    'note': 'The access point will remain active. To disable it, run: sudo systemctl stop hostapd dnsmasq'
+                    'note': 'Verifying internet connection. If successful, captive portal will be disabled automatically.'
                 })
             else:
                 error_msg = result.stderr.strip() if result.stderr else 'Connection failed'
@@ -176,6 +186,72 @@ class CaptivePortalHandler(SimpleHTTPRequestHandler):
             self.send_json_response({'success': False, 'error': 'Connection timeout'}, 500)
         except Exception as e:
             self.send_json_response({'success': False, 'error': str(e)}, 500)
+    
+    def verify_and_disable_portal(self, ssid):
+        """Verify internet connectivity and disable captive portal if successful"""
+        print(f"[INFO] Verifying internet connectivity for {ssid}...")
+        
+        # Wait a few seconds for connection to stabilize
+        time.sleep(5)
+        
+        # Try to verify internet connectivity
+        max_attempts = 6
+        for attempt in range(1, max_attempts + 1):
+            print(f"[INFO] Connectivity check attempt {attempt}/{max_attempts}")
+            
+            if self.check_internet_connectivity():
+                print(f"[SUCCESS] Internet connectivity verified!")
+                print(f"[INFO] Disabling captive portal...")
+                
+                # Run the cleanup script to disable captive portal
+                script_path = os.path.join(
+                    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                    'access-point',
+                    'disable-captive-portal.sh'
+                )
+                
+                try:
+                    result = subprocess.run(
+                        ['sudo', 'bash', script_path],
+                        capture_output=True,
+                        text=True,
+                        timeout=30
+                    )
+                    
+                    if result.returncode == 0:
+                        print("[SUCCESS] Captive portal disabled successfully!")
+                        print("[INFO] Normal network access restored.")
+                    else:
+                        print(f"[ERROR] Failed to disable captive portal: {result.stderr}")
+                        
+                except Exception as e:
+                    print(f"[ERROR] Exception while disabling portal: {e}")
+                
+                return
+            
+            if attempt < max_attempts:
+                time.sleep(5)
+        
+        print(f"[WARNING] Internet connectivity not verified after {max_attempts} attempts.")
+        print("[INFO] Captive portal will remain active.")
+    
+    def check_internet_connectivity(self):
+        """Check if internet is accessible by pinging reliable DNS servers"""
+        dns_servers = ['8.8.8.8', '1.1.1.1', '9.9.9.9']
+        
+        for dns in dns_servers:
+            try:
+                result = subprocess.run(
+                    ['ping', '-c', '1', '-W', '2', dns],
+                    capture_output=True,
+                    timeout=3
+                )
+                if result.returncode == 0:
+                    return True
+            except:
+                continue
+        
+        return False
     
     def send_json_response(self, data, status=200):
         """Send a JSON response"""

@@ -1,0 +1,14 @@
+[Unit]
+Description=WiFi Fallback Checker - Start AP mode if WiFi fails
+After=network.target NetworkManager.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /home/pi/raspi-captive-portal/access-point/wifi-fallback-check.sh
+RemainAfterExit=yes
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
