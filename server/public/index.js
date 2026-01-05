@@ -6,6 +6,7 @@ const scanButton = document.getElementById('scanButton');
 const networksList = document.getElementById('networksList');
 const passwordSection = document.getElementById('passwordSection');
 const passwordInput = document.getElementById('password');
+const togglePasswordButton = document.getElementById('togglePassword');
 const connectButton = document.getElementById('connectButton');
 const messageDiv = document.getElementById('message');
 const statusDiv = document.getElementById('status');
@@ -16,6 +17,25 @@ checkConnectionStatus();
 // Event Listeners
 scanButton.addEventListener('click', scanNetworks);
 connectButton.addEventListener('click', connectToNetwork);
+togglePasswordButton.addEventListener('click', togglePasswordVisibility);
+passwordInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && selectedNetwork) {
+        connectToNetwork();
+    }
+});
+
+function togglePasswordVisibility() {
+    const type = passwordInput.getAttribute('type');
+    if (type === 'password') {
+        passwordInput.setAttribute('type', 'text');
+        togglePasswordButton.textContent = '🙈';
+        togglePasswordButton.title = 'Hide password';
+    } else {
+        passwordInput.setAttribute('type', 'password');
+        togglePasswordButton.textContent = '👁️';
+        togglePasswordButton.title = 'Show password';
+    }
+}
 
 function showMessage(text, type = 'info') {
     messageDiv.textContent = text;
@@ -53,19 +73,31 @@ function scanNetworks() {
     selectedNetwork = null;
     
     fetch('/api/wifi/scan')
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) {
+                throw new Error(`Server returned ${res.status}: ${res.statusText}`);
+            }
+            return res.json();
+        })
         .then(data => {
             if (data.success) {
-                displayNetworks(data.networks);
-                showMessage(`Found ${data.networks.length} networks`, 'success');
+                if (data.networks.length === 0) {
+                    networksList.innerHTML = '<div class="loading">No networks found. Try scanning again.</div>';
+                    showMessage('No networks found nearby', 'info');
+                } else {
+                    displayNetworks(data.networks);
+                    showMessage(`Found ${data.networks.length} network${data.networks.length !== 1 ? 's' : ''}`, 'success');
+                }
             } else {
-                networksList.innerHTML = '<div class="loading">No networks found</div>';
-                showMessage(data.error || 'Scan failed', 'error');
+                networksList.innerHTML = '<div class="loading">Scan failed</div>';
+                const errorMsg = data.error || 'Unknown error occurred';
+                showMessage('Scan failed: ' + errorMsg, 'error');
             }
         })
         .catch(err => {
             networksList.innerHTML = '<div class="loading">Error scanning networks</div>';
-            showMessage('Failed to scan: ' + err.message, 'error');
+            console.error('Scan error:', err);
+            showMessage('Failed to scan networks. Check if nmcli is available.', 'error');
         })
         .finally(() => {
             scanButton.disabled = false;
@@ -157,13 +189,21 @@ function connectToNetwork() {
         return;
     }
     
-    const password = passwordInput.value;
+    const password = passwordInput.value.trim();
     const requiresPassword = selectedNetwork.security && 
                            selectedNetwork.security !== 'Open' && 
                            selectedNetwork.security !== '--';
     
     if (requiresPassword && !password) {
         showMessage('Please enter the password', 'error');
+        passwordInput.focus();
+        return;
+    }
+    
+    // Validate password length for WPA/WPA2
+    if (requiresPassword && password.length < 8) {
+        showMessage('WiFi password must be at least 8 characters', 'error');
+        passwordInput.focus();
         return;
     }
     
@@ -181,12 +221,19 @@ function connectToNetwork() {
             password: password
         })
     })
-    .then(res => res.json())
+    .then(res => {
+        if (!res.ok) {
+            throw new Error(`Server returned ${res.status}: ${res.statusText}`);
+        }
+        return res.json();
+    })
     .then(data => {
         if (data.success) {
             showMessage(`✓ ${data.message}`, 'success');
             if (data.note) {
-                showMessage(`${data.message}\n\n${data.note}`, 'success');
+                setTimeout(() => {
+                    showMessage(data.note, 'info');
+                }, 2000);
             }
             // Refresh status
             setTimeout(checkConnectionStatus, 2000);
@@ -198,11 +245,23 @@ function connectToNetwork() {
                 item.classList.remove('selected');
             });
         } else {
-            showMessage(`✗ ${data.error}`, 'error');
+            // Parse common error messages
+            let errorMsg = data.error || 'Unknown error occurred';
+            if (errorMsg.includes('Secrets were required')) {
+                errorMsg = 'Incorrect password. Please try again.';
+                passwordInput.value = '';
+                passwordInput.focus();
+            } else if (errorMsg.includes('not found')) {
+                errorMsg = 'Network not found. Try scanning again.';
+            } else if (errorMsg.includes('timeout')) {
+                errorMsg = 'Connection timeout. Network may be out of range.';
+            }
+            showMessage(`✗ ${errorMsg}`, 'error');
         }
     })
     .catch(err => {
-        showMessage('Connection failed: ' + err.message, 'error');
+        console.error('Connection error:', err);
+        showMessage('Connection failed. Please check the password and try again.', 'error');
     })
     .finally(() => {
         connectButton.disabled = false;

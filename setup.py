@@ -81,7 +81,7 @@ def done():
 
     final_msg = (
         "Awesome, we are done here. Grab your phone and look for the\n"
-        '"Splines Raspi AP" WiFi (password: "splinesraspi").'
+        '"ByteNode - Pi" WiFi (no password required).'
         "\n"
         "When you reboot the Raspi, wait 2 minutes, then the WiFi network\n"
         "and the server should be up and running again automatically.\n"

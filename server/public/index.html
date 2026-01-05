@@ -132,18 +132,40 @@
             margin-bottom: 20px;
         }
         
+        .password-wrapper {
+            position: relative;
+            margin-top: 8px;
+        }
+        
         .password-section input {
             width: 100%;
-            padding: 12px;
+            padding: 12px 45px 12px 12px;
             border: 2px solid #e0e0e0;
             border-radius: 6px;
             font-size: 14px;
-            margin-top: 8px;
         }
         
         .password-section input:focus {
             outline: none;
             border-color: #667eea;
+        }
+        
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            font-size: 18px;
+            color: #666;
+            transition: color 0.2s;
+        }
+        
+        .toggle-password:hover {
+            color: #667eea;
         }
         
         .connect-button {
@@ -222,7 +244,12 @@
         
         <div id="passwordSection" class="password-section" style="display: none;">
             <label for="password">Password:</label>
-            <input type="password" id="password" placeholder="Enter WiFi password">
+            <div class="password-wrapper">
+                <input type="password" id="password" placeholder="Enter WiFi password">
+                <button type="button" class="toggle-password" id="togglePassword" title="Toggle password visibility">
+                    👁️
+                </button>
+            </div>
         </div>
         
         <button id="connectButton" class="connect-button" style="display: none;">Connect</button>

@@ -58,7 +58,7 @@ You probably want to use this repo in one of these ways:
 <details>
   <summary><strong>Connection</strong></summary>
 
-  After the installation, you should be able to connect to the new WiFi network called `Splines Raspi AP` using the password `splinesraspi`. You should be redirected to the WiFi configuration page. If you open a "normal" browser, type in any http URL (http**s** URLs are not working) and you should also get redirected to the configuration page. The URL is supposed to read `splines.portal` (but visiting any URL should redirect there).
+  After the installation, you should be able to connect to the new WiFi network called `ByteNode - Pi` (no password required). You should be redirected to the WiFi configuration page. If you open a "normal" browser, type in any http URL (http**s** URLs are not working) and you should also get redirected to the configuration page. The URL is supposed to read `splines.portal` (but visiting any URL should redirect there).
 
   **Using the WiFi Configuration Interface:**
   1. Click "Scan for Networks" to see available WiFi networks
@@ -87,7 +87,7 @@ You probably want to use this repo in one of these ways:
 
   - static ip for the raspi: `192.168.4.1/24`
   - using `wlan0` as interface
-  - WiFi: SSID: `Splines Raspi AP`, password: `splinesraspi`,
+  - WiFi: SSID: `ByteNode - Pi` (open network, no password),
     <br>country code: `DE` (change if you are not in Germany)
   - Server: port: `3000` (all requests on port 80 (http) get redirected to this port), host name: `splines.portal`
   - WiFi management: Uses `nmcli` (NetworkManager) for scanning and connecting
@@ -100,15 +100,15 @@ You probably want to use this repo in one of these ways:
 
 If this first assistance does not help, feel free to open a new issue.
 
-🎈 **I can't connect to the `Splines Raspi AP` WiFi or get thrown out**
+🎈 **I can't connect to the `ByteNode - Pi` WiFi or get thrown out**
 
-Double check that you've entered the correct password: `splinesraspi`. Also, the Raspberry Pi won't provide Internet access to you, it will just serve a static HTML page as captive portal. This is why you might get thrown out of the WiFi network. If this is the case, there is usually an option to "Use this network without Internet access" (or the like). It might also help to disable mobile data.
+The network is open (no password required). The Raspberry Pi won't provide Internet access to you, it will just serve the WiFi configuration page as captive portal. This is why you might get thrown out of the WiFi network. If this is the case, there is usually an option to "Use this network without Internet access" (or the like). It might also help to disable mobile data.
 
 🎈 **How can I use a "normal" browser when I have to click "Cancel" in the captive portal?**
 
 The Raspberry Pi serves as Access Point and does not provide Internet access to you. Therefore on the captive portal you might have to click "cancel" (e.g. on iOS) and then "Use this network without Internet access" (or the like). After that, you can open any "real" browser on your phone, e.g. Chrome, Firefox, Safari (and so forth), and go to the website `splines.portal` (any other website should redirect you to this page).
 
-🎈 **I don't see the `Splines Raspi AP` WiFi network**
+🎈 **I don't see the `ByteNode - Pi` WiFi network**
 
 Make sure that everything worked fine in the installation script. Check the output of hostapd (host access point daemon); has it started correctly?
 
