@@ -1,4 +1,3 @@
-import json
 import os
 import re
 import subprocess
@@ -32,52 +31,6 @@ def check_super_user():
         print("Running as root user, continue.")
 
 
-def install_node():
-    NODE_JS_VERSION = 22  # EOL: October 2025 (https://nodejs.org/en/about/previous-releases)
-
-    def get_versions():
-        res = subprocess.run(["npm", "version", "--json"], capture_output=True, check=True)
-        return json.loads(res.stdout)
-
-    print()
-    ColorPrint.print(cyan, "▶ Node.js & npm")
-
-    # Already installed?
-    data = {}
-    try:
-        data = get_versions()
-        if data["npm"] and data["node"]:
-            installed = True
-    except Exception:  # pylint: disable=broad-except
-        installed = False
-
-    if installed:
-        print(f'You have Node.js v{data["node"]} and npm v{data["npm"]} installed.')
-
-        majorVersion = data["node"].split(".")[0]
-        if int(majorVersion) < NODE_JS_VERSION:
-            answer = query_yes_no(
-                f"Would you still like to try installing Node.js v{NODE_JS_VERSION}.x (LTS)?",
-                default="yes",
-            )
-            installed = not answer
-
-    # Install
-    if not installed:
-        # https://nodejs.org/en/download
-        subprocess.run(
-            "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash",
-            shell=True,
-            check=True,
-        )
-        subprocess.run(
-            f". $HOME/.nvm/nvm.sh && nvm install {NODE_JS_VERSION}",
-            shell=True,
-            check=True,
-            executable="/bin/bash",
-        )
-
-
 def setup_access_point():
     print()
     ColorPrint.print(cyan, "▶ Setup Access Point (WiFi)")
@@ -95,24 +48,9 @@ def setup_access_point():
     subprocess.run("./access-point/setup-access-point.sh", shell=True, check=True)
 
 
-def install_server_dependencies():
-    print()
-    ColorPrint.print(cyan, "▶ Install Node.js dependencies for backend")
-
-    subprocess.call("npm install", shell=True, cwd="./server")
-
-
-def build_server():
-    print()
-    ColorPrint.print(cyan, "▶ Build Node.js server (typescript)")
-
-    print("This might take some time...")
-    subprocess.call("npm run build", shell=True, cwd="./server")
-
-
 def setup_server_service():
     print()
-    ColorPrint.print(cyan, "▶ Configure Node.js server to start at boot")
+    ColorPrint.print(cyan, "▶ Configure Python server to start at boot")
 
     # Replace path in file
     server_path = os.path.join(os.getcwd(), "server")
@@ -123,7 +61,7 @@ def setup_server_service():
     with open(server_config_path, "w", encoding="utf-8") as f:
         f.write(filedata)
 
-    print("We will now register the Node.js app as a Linux service and configure")
+    print("We will now register the Python server as a Linux service and configure")
     print("it to start at boot time.")
     print("The following commands will execute as sudo user.")
     print('Please make sure you look through the file "./access-point/setup-server.sh"')
@@ -160,11 +98,7 @@ def execute_all():
     print_header()
     check_super_user()
 
-    install_node()
     setup_access_point()
-
-    install_server_dependencies()
-    build_server()
     setup_server_service()
 
     done()
