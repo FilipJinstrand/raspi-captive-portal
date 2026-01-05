@@ -189,7 +189,19 @@ class CaptivePortalHandler(SimpleHTTPRequestHandler):
     
     def verify_and_disable_portal(self, ssid):
         """Verify internet connectivity and disable captive portal if successful"""
-        print(f"[INFO] Verifying internet connectivity for {ssid}...")
+        log_file = '/tmp/captive-portal-verification.log'
+        
+        def log(message):
+            timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
+            log_msg = f"[{timestamp}] {message}"
+            print(log_msg)
+            try:
+                with open(log_file, 'a') as f:
+                    f.write(log_msg + '\n')
+            except Exception:
+                pass
+        
+        log(f"[INFO] Verifying internet connectivity for {ssid}...")
         
         # Wait a few seconds for connection to stabilize
         time.sleep(5)
@@ -197,18 +209,21 @@ class CaptivePortalHandler(SimpleHTTPRequestHandler):
         # Try to verify internet connectivity
         max_attempts = 6
         for attempt in range(1, max_attempts + 1):
-            print(f"[INFO] Connectivity check attempt {attempt}/{max_attempts}")
+            log(f"[INFO] Connectivity check attempt {attempt}/{max_attempts}")
             
             if self.check_internet_connectivity():
-                print(f"[SUCCESS] Internet connectivity verified!")
-                print(f"[INFO] Disabling captive portal...")
+                log(f"[SUCCESS] Internet connectivity verified!")
+                log(f"[INFO] Disabling captive portal...")
                 
                 # Run the cleanup script to disable captive portal
+                # Use absolute path construction for robustness
                 script_path = os.path.join(
                     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                     'access-point',
                     'disable-captive-portal.sh'
                 )
+                
+                log(f"[INFO] Running cleanup script: {script_path}")
                 
                 try:
                     result = subprocess.run(
@@ -219,20 +234,25 @@ class CaptivePortalHandler(SimpleHTTPRequestHandler):
                     )
                     
                     if result.returncode == 0:
-                        print("[SUCCESS] Captive portal disabled successfully!")
-                        print("[INFO] Normal network access restored.")
+                        log("[SUCCESS] Captive portal disabled successfully!")
+                        log("[INFO] Normal network access restored.")
+                        if result.stdout:
+                            log(f"[INFO] Script output: {result.stdout.strip()}")
                     else:
-                        print(f"[ERROR] Failed to disable captive portal: {result.stderr}")
+                        log(f"[ERROR] Failed to disable captive portal (exit code {result.returncode})")
+                        if result.stderr:
+                            log(f"[ERROR] Script error: {result.stderr.strip()}")
                         
                 except Exception as e:
-                    print(f"[ERROR] Exception while disabling portal: {e}")
+                    log(f"[ERROR] Exception while disabling portal: {e}")
                 
                 return
             
             if attempt < max_attempts:
                 time.sleep(5)
         
-        print(f"[WARNING] Internet connectivity not verified after {max_attempts} attempts.")
+        log(f"[WARNING] Internet connectivity not verified after {max_attempts} attempts.")
+        log(f"[WARNING] Captive portal remains active. WiFi may not have internet access.")
         print("[INFO] Captive portal will remain active.")
     
     def check_internet_connectivity(self):

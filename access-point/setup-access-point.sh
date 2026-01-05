@@ -62,3 +62,21 @@ sudo cp ./access-point/hostapd.conf /etc/hostapd/hostapd.conf
 sudo systemctl unmask hostapd
 sudo systemctl enable hostapd
 sudo systemctl start hostapd
+
+# --- Configure sudoers for automated portal disable
+# Allow users to run captive portal management commands without password
+echo "Configuring sudoers for automated captive portal management..."
+sudo bash -c 'cat > /etc/sudoers.d/captive-portal << EOF
+# Allow automated captive portal management without password
+# Used by the web server to disable portal after successful WiFi connection
+ALL ALL=(ALL) NOPASSWD: /bin/systemctl stop hostapd
+ALL ALL=(ALL) NOPASSWD: /bin/systemctl stop dnsmasq
+ALL ALL=(ALL) NOPASSWD: /bin/systemctl start hostapd
+ALL ALL=(ALL) NOPASSWD: /bin/systemctl start dnsmasq
+ALL ALL=(ALL) NOPASSWD: /sbin/iptables
+ALL ALL=(ALL) NOPASSWD: /usr/sbin/netfilter-persistent
+EOF'
+sudo chmod 0440 /etc/sudoers.d/captive-portal
+
+# Make cleanup script executable
+sudo chmod +x ./access-point/disable-captive-portal.sh
