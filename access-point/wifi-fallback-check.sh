@@ -75,6 +75,11 @@ if [ "$wifi_connected" = true ]; then
     sudo iptables -t nat -D PREROUTING -p tcp --dport 80 -j DNAT --to-destination 192.168.4.1:3000 2>/dev/null || true
     sudo netfilter-persistent save 2>/dev/null || true
     
+    # Reconfigure wlan0 back to normal WiFi client mode
+    log_message "Reconfiguring wlan0 interface to client mode..."
+    sudo ip addr flush dev wlan0 2>/dev/null || true
+    sudo systemctl restart dhcpcd 2>/dev/null || true
+    
     log_message "Captive portal services stopped."
 else
     log_message "WiFi connection failed after $MAX_ATTEMPTS attempts."

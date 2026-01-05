@@ -73,7 +73,9 @@ ALL ALL=(ALL) NOPASSWD: /bin/systemctl stop hostapd
 ALL ALL=(ALL) NOPASSWD: /bin/systemctl stop dnsmasq
 ALL ALL=(ALL) NOPASSWD: /bin/systemctl start hostapd
 ALL ALL=(ALL) NOPASSWD: /bin/systemctl start dnsmasq
+ALL ALL=(ALL) NOPASSWD: /bin/systemctl restart dhcpcd
 ALL ALL=(ALL) NOPASSWD: /sbin/iptables
+ALL ALL=(ALL) NOPASSWD: /sbin/ip
 ALL ALL=(ALL) NOPASSWD: /usr/sbin/netfilter-persistent
 EOF'
 sudo chmod 0440 /etc/sudoers.d/captive-portal

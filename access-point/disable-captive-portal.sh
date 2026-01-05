@@ -18,6 +18,13 @@ sudo iptables -t nat -D PREROUTING -p tcp --dport 80 -j DNAT --to-destination 19
 echo "Saving iptables configuration..."
 sudo netfilter-persistent save
 
+# Reconfigure wlan0 back to normal WiFi client mode
+echo "Reconfiguring wlan0 interface to client mode..."
+# Remove the static IP configuration from wlan0
+sudo ip addr flush dev wlan0 2>/dev/null || true
+# Restart dhcpcd to apply normal DHCP client behavior
+sudo systemctl restart dhcpcd
+
 echo "Captive portal disabled successfully."
 echo "Access point services stopped. Normal network access restored."
 echo "Note: Services are still enabled and will restart on boot if WiFi connection fails."
