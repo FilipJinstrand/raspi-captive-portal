@@ -187,9 +187,10 @@ This might happen if portal didn't fully disable. Manually disable it:
 # Stop services
 sudo systemctl stop hostapd
 sudo systemctl stop dnsmasq
+sudo systemctl stop access-point-server
 
-# Remove iptables rule
-sudo iptables -t nat -D PREROUTING -p tcp --dport 80 -j DNAT --to-destination 192.168.4.1:3000
+# Remove iptables rule (port 8090)
+sudo iptables -t nat -D PREROUTING -p tcp --dport 80 -j DNAT --to-destination 192.168.4.1:8090
 
 # Save changes
 sudo netfilter-persistent save

@@ -70,9 +70,11 @@ if [ "$wifi_connected" = true ]; then
     # Make sure AP services are stopped
     sudo systemctl stop hostapd 2>/dev/null || true
     sudo systemctl stop dnsmasq 2>/dev/null || true
+    sudo systemctl stop access-point-server 2>/dev/null || true
     
     # Remove iptables NAT rule if it exists
     sudo iptables -t nat -D PREROUTING -p tcp --dport 80 -j DNAT --to-destination 192.168.4.1:3000 2>/dev/null || true
+    sudo iptables -t nat -D PREROUTING -p tcp --dport 80 -j DNAT --to-destination 192.168.4.1:8090 2>/dev/null || true
     sudo netfilter-persistent save 2>/dev/null || true
     
     # Reconfigure wlan0 back to normal WiFi client mode
@@ -88,10 +90,11 @@ else
     # Start AP services
     sudo systemctl start hostapd
     sudo systemctl start dnsmasq
+    sudo systemctl start access-point-server
     
     # Ensure iptables NAT rule is in place
-    sudo iptables -t nat -C PREROUTING -p tcp --dport 80 -j DNAT --to-destination 192.168.4.1:3000 2>/dev/null || \
-        sudo iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to-destination 192.168.4.1:3000
+    sudo iptables -t nat -C PREROUTING -p tcp --dport 80 -j DNAT --to-destination 192.168.4.1:8090 2>/dev/null || \
+        sudo iptables -t nat -I PREROUTING -p tcp --dport 80 -j DNAT --to-destination 192.168.4.1:8090
     
     sudo netfilter-persistent save
     

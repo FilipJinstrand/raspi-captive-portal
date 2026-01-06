@@ -162,16 +162,19 @@ class CaptivePortalHandler(SimpleHTTPRequestHandler):
             if result.returncode == 0:
                 # Connection command succeeded, now verify internet connectivity
                 # Start verification in background thread to not block the response
-                threading.Thread(
+                print(f"[INFO] Starting background verification thread for {ssid}")
+                verification_thread = threading.Thread(
                     target=self.verify_and_disable_portal,
                     args=(ssid,),
                     daemon=True
-                ).start()
+                )
+                verification_thread.start()
+                print(f"[INFO] Verification thread started: {verification_thread.is_alive()}")
                 
                 self.send_json_response({
                     'success': True,
                     'message': f'Successfully connected to {ssid}',
-                    'note': 'Verifying internet connection. If successful, captive portal will be disabled automatically.'
+                    'note': 'Verifying internet connection. If successful, captive portal will be disabled automatically. Check /tmp/captive-portal-verification.log for status.'
                 })
             else:
                 error_msg = result.stderr.strip() if result.stderr else 'Connection failed'
@@ -286,7 +289,7 @@ class CaptivePortalHandler(SimpleHTTPRequestHandler):
         print(f"[{self.log_date_time_string()}] {format % args}")
 
 
-def run_server(port=3000):
+def run_server(port=8090):
     """Start the HTTP server"""
     # Change to the script's directory so relative paths work
     os.chdir(os.path.dirname(os.path.abspath(__file__)))

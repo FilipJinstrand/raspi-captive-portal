@@ -89,7 +89,7 @@ You probably want to use this repo in one of these ways:
   - using `wlan0` as interface
   - WiFi: SSID: `ByteNode - Pi` (open network, no password),
     <br>country code: `DE` (change if you are not in Germany)
-  - Server: port: `3000` (all requests on port 80 (http) get redirected to this port), host name: `splines.portal`
+  - Server: port: `8090` (all requests on port 80 (http) get redirected to this port), host name: `splines.portal`
   - WiFi management: Uses `nmcli` (NetworkManager) for scanning and connecting
 
 </details>
@@ -138,7 +138,7 @@ Access the URL `splines.portal` in your browser. Also make sure that the server 
 sudo systemctl status access-point-server
 ```
 
-The output should contain: "Captive Portal Server running on port 3000". Any error here? Try to restart the service:
+The output should contain: "Captive Portal Server running on port 8090". Any error here? Try to restart the service:
 
 ```bash
 sudo systemctl restart access-point-server

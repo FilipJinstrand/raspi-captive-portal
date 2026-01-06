@@ -6,13 +6,17 @@
 echo "Disabling captive portal services..."
 
 # Stop access point and DNS services
-echo "Stopping hostapd and dnsmasq services..."
+echo "Stopping hostapd, dnsmasq, and captive portal web server..."
 sudo systemctl stop hostapd
 sudo systemctl stop dnsmasq
+sudo systemctl stop access-point-server
 
 # Remove iptables NAT rule for HTTP redirection
 echo "Removing iptables NAT rules..."
+# Remove potential rule for port 3000 (old config)
 sudo iptables -t nat -D PREROUTING -p tcp --dport 80 -j DNAT --to-destination 192.168.4.1:3000 2>/dev/null || true
+# Remove rule for port 8090 (new config)
+sudo iptables -t nat -D PREROUTING -p tcp --dport 80 -j DNAT --to-destination 192.168.4.1:8090 2>/dev/null || true
 
 # Save iptables changes
 echo "Saving iptables configuration..."
