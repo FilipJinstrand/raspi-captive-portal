@@ -22,7 +22,10 @@ sudo systemctl stop hostapd
 
 # Raspberry Pi acts as router on wirless network
 # As it runs a DHCP Server, the Raspi needs a static IP address
-cat ./access-point/dhcpcd.conf | sudo tee -a /etc/dhcpcd.conf > /dev/null
+# Only append if not already present
+if ! grep -q "static ip_address=192.168.4.1/24" /etc/dhcpcd.conf; then
+    cat ./access-point/dhcpcd.conf | sudo tee -a /etc/dhcpcd.conf > /dev/null
+fi
 sudo systemctl restart dhcpcd
 
 # --- Configure DHCP server (dnsmasq)

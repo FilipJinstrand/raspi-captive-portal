@@ -79,6 +79,11 @@ if [ "$wifi_connected" = true ]; then
     
     # Reconfigure wlan0 back to normal WiFi client mode
     log_message "Reconfiguring wlan0 interface to client mode..."
+    # Remove static IP config from dhcpcd.conf so it doesn't persist
+    sudo sed -i '/interface wlan0/d' /etc/dhcpcd.conf
+    sudo sed -i '/static ip_address=192.168.4.1\/24/d' /etc/dhcpcd.conf
+    sudo sed -i '/nohook wpa_supplicant/d' /etc/dhcpcd.conf
+    
     sudo ip addr flush dev wlan0 2>/dev/null || true
     sudo systemctl restart dhcpcd 2>/dev/null || true
     
@@ -86,6 +91,16 @@ if [ "$wifi_connected" = true ]; then
 else
     log_message "WiFi connection failed after $MAX_ATTEMPTS attempts."
     log_message "Starting captive portal (AP mode) for reconfiguration..."
+    
+    # Ensure static IP config exists for AP mode
+    if ! grep -q "static ip_address=192.168.4.1/24" /etc/dhcpcd.conf; then
+        log_message "Restoring static IP config to /etc/dhcpcd.conf"
+        echo "interface wlan0" | sudo tee -a /etc/dhcpcd.conf >/dev/null
+        echo "    static ip_address=192.168.4.1/24" | sudo tee -a /etc/dhcpcd.conf >/dev/null
+        echo "    nohook wpa_supplicant" | sudo tee -a /etc/dhcpcd.conf >/dev/null
+        sudo systemctl restart dhcpcd
+        sleep 2
+    fi
     
     # Start AP services
     sudo systemctl start hostapd

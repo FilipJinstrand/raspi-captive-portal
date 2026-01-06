@@ -24,10 +24,18 @@ sudo netfilter-persistent save
 
 # Reconfigure wlan0 back to normal WiFi client mode
 echo "Reconfiguring wlan0 interface to client mode..."
-# Remove the static IP configuration from wlan0
+# Remove the static IP configuration from wlan0 in dhcpcd.conf
+echo "Removing static IP configuration from /etc/dhcpcd.conf..."
+sudo sed -i '/interface wlan0/d' /etc/dhcpcd.conf
+sudo sed -i '/static ip_address=192.168.4.1\/24/d' /etc/dhcpcd.conf
+sudo sed -i '/nohook wpa_supplicant/d' /etc/dhcpcd.conf
+
+# Remove the static IP configuration from wlan0 interface immediately
 sudo ip addr flush dev wlan0 2>/dev/null || true
-# Restart dhcpcd to apply normal DHCP client behavior
+# Restart dhcpcd to apply normal DHCP client behavior (or stop it if it conflicts with NetworkManager)
+# For Bookworm/NetworkManager, we might just want to restart the interface connection
 sudo systemctl restart dhcpcd
+
 
 echo "Captive portal disabled successfully."
 echo "Access point services stopped. Normal network access restored."
