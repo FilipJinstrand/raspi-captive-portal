@@ -40,7 +40,9 @@ sudo cp ./access-point/dnsmasq.conf /etc/dnsmasq.conf
 echo "DNSMASQ_EXCEPT=lo" | sudo tee -a /etc/default/dnsmasq > /dev/null
 
 sudo systemctl unmask dnsmasq.service
-sudo systemctl enable dnsmasq.service
+# Disable by default so they don't race with AdGuard on boot
+# They will be started by wifi-fallback-check.sh if needed
+sudo systemctl disable dnsmasq.service
 sudo systemctl restart dnsmasq
 
 # --- Routing and masquerade
@@ -63,7 +65,8 @@ sudo netfilter-persistent save
 sudo rfkill unblock wlan
 sudo cp ./access-point/hostapd.conf /etc/hostapd/hostapd.conf
 sudo systemctl unmask hostapd
-sudo systemctl enable hostapd
+# Disable by default so they don't race with AdGuard on boot
+sudo systemctl disable hostapd
 sudo systemctl start hostapd
 
 # --- Configure sudoers for automated portal disable
@@ -80,6 +83,7 @@ ALL ALL=(ALL) NOPASSWD: /bin/systemctl restart dhcpcd
 ALL ALL=(ALL) NOPASSWD: /sbin/iptables
 ALL ALL=(ALL) NOPASSWD: /sbin/ip
 ALL ALL=(ALL) NOPASSWD: /usr/sbin/netfilter-persistent
+ALL ALL=(ALL) NOPASSWD: /usr/bin/docker
 EOF'
 sudo chmod 0440 /etc/sudoers.d/captive-portal
 

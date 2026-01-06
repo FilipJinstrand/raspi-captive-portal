@@ -72,6 +72,10 @@ if [ "$wifi_connected" = true ]; then
     sudo systemctl stop dnsmasq 2>/dev/null || true
     sudo systemctl stop access-point-server 2>/dev/null || true
     
+    # Ensure AdGuard Home is running (it might have been stopped if we were previously in AP mode)
+    log_message "Starting AdGuard Home container..."
+    sudo docker start adguardhome 2>/dev/null || true
+    
     # Remove iptables NAT rule if it exists
     sudo iptables -t nat -D PREROUTING -p tcp --dport 80 -j DNAT --to-destination 192.168.4.1:3000 2>/dev/null || true
     sudo iptables -t nat -D PREROUTING -p tcp --dport 80 -j DNAT --to-destination 192.168.4.1:8090 2>/dev/null || true
@@ -91,6 +95,10 @@ if [ "$wifi_connected" = true ]; then
 else
     log_message "WiFi connection failed after $MAX_ATTEMPTS attempts."
     log_message "Starting captive portal (AP mode) for reconfiguration..."
+    
+    # Stop AdGuard Home to free up port 53 for dnsmasq
+    log_message "Stopping AdGuard Home container to free ports..."
+    sudo docker stop adguardhome 2>/dev/null || true
     
     # Ensure static IP config exists for AP mode
     if ! grep -q "static ip_address=192.168.4.1/24" /etc/dhcpcd.conf; then

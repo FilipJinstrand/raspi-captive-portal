@@ -36,6 +36,8 @@ sudo ip addr flush dev wlan0 2>/dev/null || true
 # For Bookworm/NetworkManager, we might just want to restart the interface connection
 sudo systemctl restart dhcpcd
 
+echo "Starting AdGuard Home container..."
+sudo docker start adguardhome 2>/dev/null || true
 
 echo "Captive portal disabled successfully."
 echo "Access point services stopped. Normal network access restored."
