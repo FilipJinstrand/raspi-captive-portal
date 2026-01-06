@@ -19,6 +19,10 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get install -y netfilter-persistent ipta
 # Stop services since configuration files are not ready yet
 sudo systemctl stop dnsmasq
 sudo systemctl stop hostapd
+# Ensure AdGuard is stopped so we can configure/start dnsmasq without port 53 conflict
+if command -v docker >/dev/null 2>&1; then
+    sudo docker stop adguardhome 2>/dev/null || true
+fi
 
 # Raspberry Pi acts as router on wirless network
 # As it runs a DHCP Server, the Raspi needs a static IP address
